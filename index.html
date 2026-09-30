@@ -1,163 +1,399 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>영어 지문 인터랙티브 학습기</title>
+    <title>고등 내신/수능 분석 스타일 영어 학습기</title>
+    <!-- Pretendard 폰트 적용 (가독성 최상) -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <!-- Mermaid.js (지문 구조도용) -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: 'Noto Sans KR', -apple-system, sans-serif; line-height: 1.7; padding: 20px; max-width: 960px; margin: 0 auto; background-color: #f4f7f6; color: #333; }
-        h1, h2, h3 { color: #2c3e50; }
-        .card { background: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        
-        /* 단어 커서 툴팁 */
-        .word { position: relative; display: inline-block; border-bottom: 2px dotted #3498db; color: #2980b9; cursor: pointer; font-weight: 500; padding: 0 2px; }
-        .word:hover::after {
-            content: attr(data-meaning);
-            position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%);
-            background-color: #2c3e50; color: #fff; padding: 6px 10px; border-radius: 6px;
-            font-size: 13px; font-weight: normal; white-space: nowrap; z-index: 100;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        :root {
+            --primary-color: #1e3a8a; /* 딥 블루 */
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --subject-color: #2563eb; /* S: 파랑 */
+            --verb-color: #dc2626;    /* V: 빨강 */
+            --object-color: #16a34a;  /* O/C: 초록 */
+            --modifier-color: #d97706;/* M: 주황 */
+            --highlight-bg: #fef08a; /* 출제포인트 형광펜 */
         }
 
-        /* 구분선 & 강조 */
-        .slash { color: #bdc3c7; font-weight: bold; margin: 0 4px; }
-        .chunk-box { margin-bottom: 12px; display: inline-block; }
-        .chunk-trans { font-size: 0.88em; color: #7f8c8d; display: block; margin-top: -2px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: "Pretendard Variable", Pretendard, -apple-system, sans-serif; 
+            line-height: 1.8; 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            padding: 24px 16px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
 
-        /* 테이블 스타일 (어휘/구문) */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #e2e8f0; padding: 10px 12px; text-align: left; }
-        th { background-color: #edf2f7; color: #4a5568; }
+        header {
+            text-align: center;
+            margin-bottom: 32px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(30, 58, 138, 0.3);
+        }
+        header h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+        header p { font-size: 14px; opacity: 0.9; margin-top: 6px; }
 
-        textarea { width: 100%; height: 120px; padding: 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-family: monospace; }
-        button { background-color: #3182ce; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; }
-        button:hover { background-color: #2b6cb0; }
+        .card { 
+            background: var(--card-bg); 
+            padding: 28px; 
+            border-radius: 16px; 
+            margin-bottom: 28px; 
+            box-shadow: 0 4px 16px rgba(0,0,0,0.04); 
+            border: 1px solid #e2e8f0;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        /* JSON 입력창 스타일 */
+        textarea { 
+            width: 100%; 
+            height: 120px; 
+            padding: 14px; 
+            border: 2px solid #cbd5e1; 
+            border-radius: 10px; 
+            font-family: monospace; 
+            font-size: 13px;
+            resize: vertical;
+        }
+        textarea:focus { border-color: var(--primary-color); outline: none; }
+        
+        button.btn-primary { 
+            background-color: var(--primary-color); 
+            color: white; 
+            padding: 14px 28px; 
+            border: none; 
+            border-radius: 10px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            font-size: 16px; 
+            width: 100%;
+            margin-top: 12px;
+            transition: all 0.2s;
+        }
+        button.btn-primary:hover { background-color: #1e40af; transform: translateY(-1px); }
+
+        /* 문장별 내신 분석 카드 레이아웃 */
+        .sentence-card {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-left: 6px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .sentence-num {
+            display: inline-block;
+            background: #e0e7ff;
+            color: var(--primary-color);
+            font-size: 13px;
+            font-weight: 800;
+            padding: 2px 10px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+        }
+
+        /* 1:1 직독직해 구문 청크 스타일 */
+        .chunk-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 8px;
+            margin-bottom: 14px;
+            align-items: baseline;
+        }
+        .chunk-unit {
+            background: #f1f5f9;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .chunk-en {
+            font-size: 19px;
+            font-weight: 600;
+            color: #0f172a;
+            line-height: 1.5;
+        }
+        .chunk-kr {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        /* 단어 툴팁 스타일 */
+        .word { 
+            position: relative; 
+            display: inline-block; 
+            border-bottom: 2px solid #93c5fd; 
+            color: #1e40af; 
+            cursor: pointer; 
+            font-weight: 600; 
+        }
+        .word:hover { background-color: #dbeafe; border-radius: 4px; }
+        .word:hover::after {
+            content: attr(data-meaning);
+            position: absolute; 
+            bottom: 130%; 
+            left: 50%; 
+            transform: translateX(-50%);
+            background-color: #0f172a; 
+            color: #ffffff; 
+            padding: 6px 12px; 
+            border-radius: 6px;
+            font-size: 13px; 
+            font-weight: 500; 
+            white-space: nowrap; 
+            z-index: 1000;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+        }
+
+        /* 구문 분석 태그 스타일 (S, V, O, C, M 배지) */
+        .syntax-box {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 15px;
+            border: 1px dashed #cbd5e1;
+            margin-top: 10px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 800;
+            color: white;
+            margin: 0 2px;
+        }
+        .badge-s { background-color: var(--subject-color); }
+        .badge-v { background-color: var(--verb-color); }
+        .badge-o { background-color: var(--object-color); }
+        .badge-m { background-color: var(--modifier-color); }
+
+        /* 출제 포인트 강조 박스 */
+        .grammar-point-box {
+            background-color: #fefce8;
+            border: 1px solid #fef08a;
+            border-left: 4px solid #eab308;
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 14px;
+            color: #854d0e;
+        }
+
+        /* 단어장 테이블 */
+        .vocab-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .vocab-table th, .vocab-table td { border: 1px solid #e2e8f0; padding: 12px 14px; font-size: 15px; }
+        .vocab-table th { background-color: #f1f5f9; color: #334155; font-weight: 700; text-align: left; }
+        .vocab-table tr:nth-child(even) { background-color: #f8fafc; }
+
+        /* Mermaid 지문 구조도 */
+        .mermaid { display: flex; justify-content: center; background: #fafafa; padding: 16px; border-radius: 8px; }
     </style>
 </head>
 <body>
 
-    <h1>📘 영어 지문 자동 분석 학습기</h1>
+    <header>
+        <h1>📖 고등 내신 분석용 한 줄 학습기</h1>
+        <p>기초부터 직독직해 · 구문분석 · 출제포인트까지 한눈에 파악하기</p>
+    </header>
     
-    <!-- JSON 입력 구역 -->
+    <!-- 1. JSON 입력 창 -->
     <div class="card">
-        <h3>1. AI 출력 JSON 데이터 입력</h3>
-        <textarea id="jsonInput" placeholder="AI가 생성한 JSON 코드를 여기에 붙여넣으세요..."></textarea>
-        <button onclick="renderApp()" style="margin-top:12px;">학습 자료 생성하기</button>
+        <div class="section-title">📥 AI 분석 JSON 데이터 입력</div>
+        <textarea id="jsonInput" placeholder="AI(Gemini/ChatGPT)가 생성해준 JSON 코드를 여기에 붙여넣으세요..."></textarea>
+        <button class="btn-primary" onclick="renderApp()">시각화 분석지 생성하기</button>
     </div>
 
-    <!-- 결과 화면 -->
+    <!-- 2. 결과 출력 영역 -->
     <div id="outputArea" style="display:none;">
-        <div class="card">
-            <h2 id="passageTitle" style="margin-top:0;"></h2>
+        
+        <!-- 지문 제목 -->
+        <div class="card" style="text-align: center; background: #eff6ff; border-color: #bfdbfe;">
+            <h2 id="passageTitle" style="color: #1e40af; font-size: 22px;"></h2>
         </div>
 
+        <!-- 핵심1: 문장별 한 줄 분석 (메인) -->
         <div class="card">
-            <h3>🔤 직독직해 & 단어 툴팁 (단어에 마우스를 올려보세요)</h3>
-            <div id="interactiveText" style="font-size: 18px; line-height: 2.2;"></div>
+            <div class="section-title">🔍 문장별 직독직해 & 구문 분석지</div>
+            <div id="sentenceCardsArea"></div>
         </div>
 
+        <!-- 핵심2: 지문 구조도 -->
         <div class="card">
-            <h3>📊 지문 구조도</h3>
+            <div class="section-title">📊 지문 흐름도 (Structure Chart)</div>
             <div class="mermaid" id="mermaidGraph"></div>
         </div>
 
+        <!-- 핵심3: 주요 어법 & 출제 포인트 모음 -->
         <div class="card">
-            <h3>📝 구문 분석 (Syntax)</h3>
-            <div id="syntaxArea"></div>
+            <div class="section-title">💡 주요 어법 & 내신 출제 포인트</div>
+            <div id="grammarSummaryArea"></div>
         </div>
 
+        <!-- 핵심4: 핵심 어휘 정리 -->
         <div class="card">
-            <h3>💡 주요 어법 설명</h3>
-            <div id="grammarArea"></div>
-        </div>
-
-        <div class="card">
-            <h3>📚 핵심 어휘 목록</h3>
+            <div class="section-title">📚 핵심 어휘 분석표</div>
             <div id="vocabArea"></div>
         </div>
 
+        <!-- 핵심5: 전체 한글 해석 -->
         <div class="card">
-            <h3>📄 전체 한글 해석</h3>
-            <p id="fullTranslation" style="font-size: 16px; color: #4a5568;"></p>
+            <div class="section-title">📄 전체 자연스러운 해석</div>
+            <p id="fullTranslation" style="font-size: 16px; color: #334155; line-height: 2; white-space: pre-line;"></p>
         </div>
     </div>
 
     <script>
-        mermaid.initialize({ startOnLoad: false });
+        mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
 
         function renderApp() {
             try {
                 let rawInput = document.getElementById('jsonInput').value.trim();
-                // 마크다운 ```json 제거 처리
+                // 마크다운 ```json 제거
                 rawInput = rawInput.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
                 
                 const data = JSON.parse(rawInput);
                 
-                // 1. 제목 및 해석
-                document.getElementById('passageTitle').innerText = data.title || "영어 지문 학습";
+                // 1. 제목 및 전체 해석
+                document.getElementById('passageTitle').innerText = "📌 " + (data.title || "영어 지문 분석");
                 document.getElementById('fullTranslation').innerText = data.full_translation || "";
 
-                // 2. 직독직해 & 툴팁 생성
-                let textHtml = "";
-                if (data.segmented_text) {
+                // 2. 문장별 분석 카드 생성 (직독직해 1:1 대역)
+                let sentenceCardsHtml = "";
+                if (data.segmented_text && data.segmented_text.length > 0) {
+                    
+                    // 청크들을 문장 단위로 그룹핑 처리
+                    let sentences = [];
+                    let currentSentence = [];
+
                     data.segmented_text.forEach(item => {
-                        textHtml += `<span class="chunk-box">`;
-                        let words = item.chunk.split(' ');
-                        words.forEach(w => {
-                            let cleanWord = w.replace(/[^a-zA-Z]/g, "").toLowerCase();
-                            let found = data.words ? data.words.find(wObj => wObj.word.toLowerCase() === cleanWord) : null;
-                            let meaning = found ? found.meaning : "";
-                            
-                            if (meaning) {
-                                textHtml += `<span class="word" data-meaning="${meaning}">${w}</span> `;
-                            } else {
-                                textHtml += `${w} `;
-                            }
+                        currentSentence.push(item);
+                        // 문장 끝(. ? !) 판단 시 구문 묶음 생성
+                        if (/[.!?]"?$/.test(item.chunk.trim())) {
+                            sentences.push([...currentSentence]);
+                            currentSentence = [];
+                        }
+                    });
+                    if (currentSentence.length > 0) sentences.push(currentSentence);
+
+                    // 문장 카드별 랜더링
+                    sentences.forEach((sChunks, idx) => {
+                        sentenceCardsHtml += `
+                        <div class="sentence-card">
+                            <span class="sentence-num">문장 #${String(idx + 1).padStart(2, '0')}</span>
+                            <div class="chunk-container">`;
+                        
+                        let fullSentenceEnText = "";
+
+                        sChunks.forEach(c => {
+                            fullSentenceEnText += c.chunk + " ";
+                            let words = c.chunk.split(' ');
+                            let chunkWordsHtml = "";
+
+                            words.forEach(w => {
+                                let cleanWord = w.replace(/[^a-zA-Z]/g, "").toLowerCase();
+                                let found = data.words ? data.words.find(wObj => wObj.word.toLowerCase() === cleanWord) : null;
+                                let meaning = found ? found.meaning : "";
+                                
+                                if (meaning) {
+                                    chunkWordsHtml += `<span class="word" data-meaning="${meaning}">${w}</span> `;
+                                } else {
+                                    chunkWordsHtml += `${w} `;
+                                }
+                            });
+
+                            sentenceCardsHtml += `
+                                <div class="chunk-unit">
+                                    <div class="chunk-en">${chunkWordsHtml}</div>
+                                    <div class="chunk-kr">${c.translation}</div>
+                                </div>`;
                         });
-                        textHtml += `<span class="slash">/</span></span> `;
+
+                        sentenceCardsHtml += `</div>`; // .chunk-container 종료
+
+                        // 해당 문장과 매칭되는 구문 분석 정보(syntax_analysis) 찾기
+                        if (data.syntax_analysis) {
+                            let matchSyntax = data.syntax_analysis.find(syn => 
+                                fullSentenceEnText.includes(syn.sentence.substring(0, 15)) || syn.sentence.includes(sChunks[0].chunk.substring(0, 15))
+                            );
+
+                            if (matchSyntax) {
+                                // S, V, O, C, M 표기 배지 변환
+                                let formattedAnalysis = matchSyntax.analysis
+                                    .replace(/\[S\]|\(S\)|\[주어\]/g, '<span class="badge badge-s">S</span>')
+                                    .replace(/\[V\]|\(V\)|\[동사\]/g, '<span class="badge badge-v">V</span>')
+                                    .replace(/\[O\]|\(O\)|\[목적어\]|\[C\]|\(C\)|\[보어\]/g, '<span class="badge badge-o">O/C</span>')
+                                    .replace(/\[M\]|\(M\)|\[수식어\]/g, '<span class="badge badge-m">M</span>');
+
+                                sentenceCardsHtml += `
+                                <div class="syntax-box">
+                                    <strong>📌 구문 분석:</strong> ${formattedAnalysis}<br>
+                                    <small style="color:#64748b; display:block; margin-top:4px;">💡 ${matchSyntax.modifier_relation || ''}</small>
+                                </div>`;
+                            }
+                        }
+
+                        sentenceCardsHtml += `</div>`; // .sentence-card 종료
                     });
                 }
-                document.getElementById('interactiveText').innerHTML = textHtml;
+                document.getElementById('sentenceCardsArea').innerHTML = sentenceCardsHtml;
 
-                // 3. 구문 분석
-                if (data.syntax_analysis) {
-                    let syntaxHtml = "<ul>";
-                    data.syntax_analysis.forEach(s => {
-                        syntaxHtml += `<li style="margin-bottom:12px;">
-                            <strong>원문:</strong> ${s.sentence}<br>
-                            <strong>분석:</strong> <code style="color:#e53e3e;">${s.analysis}</code><br>
-                            <small style="color:#718096;">${s.modifier_relation || ''}</small>
-                        </li>`;
-                    });
-                    syntaxHtml += "</ul>";
-                    document.getElementById('syntaxArea').innerHTML = syntaxHtml;
-                }
-
-                // 4. 주요 어법
+                // 3. 주요 어법 정리
                 if (data.key_grammar) {
-                    let grammarHtml = "<ul>";
+                    let grammarHtml = "<div style='display:flex; flex-direction:column; gap:12px;'>";
                     data.key_grammar.forEach(g => {
-                        grammarHtml += `<li><strong>${g.point}:</strong> ${g.target_text} - <em>${g.explanation}</em></li>`;
+                        grammarHtml += `
+                        <div class="grammar-point-box">
+                            <strong>[${g.point}]</strong> <code>${g.target_text}</code>
+                            <div style="margin-top:4px; color:#451a03;">👉 ${g.explanation}</div>
+                        </div>`;
                     });
-                    grammarHtml += "</ul>";
-                    document.getElementById('grammarArea').innerHTML = grammarHtml;
+                    grammarHtml += "div>";
+                    document.getElementById('grammarSummaryArea').innerHTML = grammarHtml;
                 }
 
-                // 5. 핵심 어휘
+                // 4. 핵심 어휘 표
                 if (data.key_vocabulary) {
-                    let vocabHtml = "<table><tr><th>단어</th><th>품사</th><th>뜻</th><th>동의어</th></tr>";
+                    let vocabHtml = `<table class="vocab-table">
+                        <thead><tr><th>표현 (Word / Phrase)</th><th>품사</th><th>뜻</th><th>유의어 (Synonym)</th></tr></thead><tbody>`;
                     data.key_vocabulary.forEach(v => {
-                        vocabHtml += `<tr><td><strong>${v.word}</strong></td><td>${v.pos || ''}</td><td>${v.meaning}</td><td>${v.synonym || '-'}</td></tr>`;
+                        vocabHtml += `<tr>
+                            <td><strong style="color:#1e40af;">${v.word}</strong></td>
+                            <td><span style="color:#64748b; font-size:13px;">${v.pos || '-'}</span></td>
+                            <td><strong>${v.meaning}</strong></td>
+                            <td><span style="color:#059669;">${v.synonym || '-'}</span></td>
+                        </tr>`;
                     });
-                    vocabHtml += "</table>";
+                    vocabHtml += "</tbody></table>";
                     document.getElementById('vocabArea').innerHTML = vocabHtml;
                 }
 
-                // 6. Mermaid 구조도 그리기
+                // 5. Mermaid 구조도
                 if (data.structure_chart) {
                     const graphDiv = document.getElementById('mermaidGraph');
                     graphDiv.removeAttribute('data-processed');
@@ -166,10 +402,10 @@
                 }
 
                 document.getElementById('outputArea').style.display = 'block';
-                alert('학습 자료가 성공적으로 생성되었습니다!');
+                alert('가독성이 개선된 내신 분석지가 생성되었습니다!');
             } catch (e) {
                 console.error(e);
-                alert('JSON 데이터 형식에 오류가 있습니다. AI가 출력한 JSON 코드 전체를 올바르게 붙여넣었는지 확인해주세요.');
+                alert('JSON 데이터 형식에 오류가 있습니다. AI가 출력한 데이터 전체를 복사했는지 확인해 주세요.');
             }
         }
     </script>
