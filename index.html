@@ -8,6 +8,8 @@
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <!-- Mermaid.js -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <!-- LZ-String 초고압축 라이브러리 (URL 길이 문제 해결) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
     
     <style>
         :root {
@@ -335,7 +337,7 @@
             <h2 id="passageTitle" style="color: #1e40af; font-size: 22px;"></h2>
         </div>
 
-        <!-- [신규 1] 지문 공부 전 핵심 어휘 사전 학습 -->
+        <!-- 핵심 어휘 사전 학습 -->
         <div class="card" id="preVocabCard">
             <div class="section-title">
                 <span>📚 [학습 전] 핵심 어휘 암기노트</span>
@@ -365,7 +367,7 @@
             <p id="fullTranslation" style="line-height: 2; white-space: pre-line; font-size: 15.5px; color: #334155;"></p>
         </div>
 
-        <!-- [신규 2] 학습 후 단어 확인 퀴즈 -->
+        <!-- 학습 후 단어 확인 퀴즈 -->
         <div class="card" id="quizCard">
             <div class="section-title">
                 <span>🧩 [학습 후] 실시간 단어 퀴즈 (Vocab Quiz)</span>
@@ -384,25 +386,30 @@
         let isMeaningHidden = false;
         let quizScore = { correct: 0, answered: 0, total: 0 };
 
-        function utf8_to_b64(str) { return window.btoa(unescape(encodeURIComponent(str))); }
-        function b64_to_utf8(str) { return decodeURIComponent(escape(window.atob(str))); }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const dataParam = urlParams.get('data');
-            if (dataParam) {
+        // 압축 데이터 수신 처리 (페이지 로드 시 & 해시 변경 시)
+        function loadFromHash() {
+            const hash = window.location.hash;
+            if (hash && hash.includes('data=')) {
                 try {
-                    const jsonStr = b64_to_utf8(decodeURIComponent(dataParam));
-                    document.getElementById('jsonInput').value = jsonStr;
-                    document.getElementById('jsonInputCard').style.display = 'none';
-                    document.getElementById('studentBadge').style.display = 'inline-block';
-                    renderApp();
+                    const compressedData = hash.split('data=')[1];
+                    const decompressed = LZString.decompressFromEncodedURIComponent(compressedData);
+                    if (decompressed) {
+                        document.getElementById('jsonInput').value = decompressed;
+                        document.getElementById('jsonInputCard').style.display = 'none';
+                        document.getElementById('studentBadge').style.display = 'inline-block';
+                        renderApp();
+                    }
                 } catch (e) {
                     console.error("공유 데이터 복원 실패:", e);
+                    alert("공유 데이터가 훼손되었거나 읽을 수 없습니다.");
                 }
             }
-        });
+        }
 
+        window.addEventListener('DOMContentLoaded', loadFromHash);
+        window.addEventListener('hashchange', loadFromHash);
+
+        // 초고압축 LZString을 활용한 안정적인 학생 공유 링크 생성
         function copyShareUrl() {
             const rawInput = document.getElementById('jsonInput').value.trim();
             if (!rawInput) {
@@ -410,13 +417,23 @@
                 return;
             }
             try {
-                const encoded = encodeURIComponent(utf8_to_b64(rawInput));
-                const shareUrl = window.location.origin + window.location.pathname + '?data=' + encoded;
-                navigator.clipboard.writeText(shareUrl).then(() => {
-                    alert("학생용 공유 링크가 클립보드에 복사되었습니다!\n학생들에게 이 링크를 전달해주시면 바로 분석지가 열립니다.");
-                });
+                // 1. JSON 데이터 초고압축
+                const compressed = LZString.compressToEncodedURIComponent(rawInput);
+                // 2. Hash(#) 기반 URL 생성 (서버 414 에러 완벽 우회)
+                const shareUrl = window.location.origin + window.location.pathname + '#data=' + compressed;
+                
+                // 3. 클립보드 복사
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(shareUrl).then(() => {
+                        alert("✅ 학생용 공유 링크가 클립보드에 복사되었습니다!\n학생들에게 전송하시면 바로 열립니다.");
+                    }).catch(() => {
+                        prompt("아래 생성된 공유 링크를 복사(Ctrl+C)해서 사용하세요:", shareUrl);
+                    });
+                } else {
+                    prompt("아래 생성된 공유 링크를 복사(Ctrl+C)해서 사용하세요:", shareUrl);
+                }
             } catch (e) {
-                alert("링크 생성 중 오류가 발생했습니다.");
+                alert("링크 생성 중 오류가 발생했습니다: " + e.message);
             }
         }
 
@@ -450,7 +467,6 @@
             });
         }
 
-        // 사전 어휘 뜻 가리기 토글
         function toggleMeaningHide() {
             isMeaningHidden = !isMeaningHidden;
             document.querySelectorAll('.vocab-meaning-td').forEach(td => {
@@ -478,7 +494,6 @@
             return null;
         }
 
-        // 실시간 4지선다 단어 퀴즈 생성 함수
         function generateQuiz() {
             if (!globalData || !globalData.key_vocabulary || globalData.key_vocabulary.length === 0) {
                 document.getElementById('quizCard').style.display = 'none';
@@ -487,31 +502,25 @@
 
             const vocabList = globalData.key_vocabulary;
             quizScore = { correct: 0, answered: 0, total: vocabList.length };
-            
             document.getElementById('quizScoreBanner').style.display = 'none';
 
             let quizHtml = "";
 
             vocabList.forEach((item, qIdx) => {
                 let correctMeaning = item.meaning;
-                
-                // 오답 보기 추출 (다른 단어들의 뜻)
                 let otherMeanings = vocabList
                     .filter(v => v.meaning !== correctMeaning)
                     .map(v => v.meaning);
                 
-                // 오답 무작위 셔플 후 3개 선택
                 otherMeanings.sort(() => Math.random() - 0.5);
                 let options = [correctMeaning, ...otherMeanings.slice(0, 3)];
 
-                // 보기가 4개가 안 될 경우 기본 더미 보기 보충
                 const dummyOptions = ["영향을 미치다", "중요한", "결과적으로", "설명하다", "분석하다"];
                 while (options.length < 4) {
                     let dummy = dummyOptions[Math.floor(Math.random() * dummyOptions.length)];
                     if (!options.includes(dummy)) options.push(dummy);
                 }
 
-                // 전체 보기 셔플
                 options.sort(() => Math.random() - 0.5);
 
                 quizHtml += `
@@ -533,27 +542,22 @@
             document.getElementById('quizArea').innerHTML = quizHtml;
         }
 
-        // 퀴즈 정답 채점 함수
         function checkAnswer(qIdx, isCorrect, btnEl) {
             const parent = document.getElementById(`quiz-item-${qIdx}`);
             const buttons = parent.querySelectorAll('.quiz-opt-btn');
             
-            // 이미 푼 문제는 입력 방지
             if (parent.dataset.answered) return;
             parent.dataset.answered = "true";
 
             quizScore.answered++;
 
-            buttons.forEach(btn => {
-                btn.style.cursor = 'default';
-            });
+            buttons.forEach(btn => { btn.style.cursor = 'default'; });
 
             if (isCorrect) {
                 btnEl.classList.add('correct');
                 quizScore.correct++;
             } else {
                 btnEl.classList.add('wrong');
-                // 정답 보기 초록색으로 힌트 표시
                 buttons.forEach(btn => {
                     if (btn.innerText === globalData.key_vocabulary[qIdx].meaning) {
                         btn.classList.add('correct');
@@ -561,7 +565,6 @@
                 });
             }
 
-            // 전체 다 풀었을 때 상단 스코어 뷰
             if (quizScore.answered === quizScore.total) {
                 const banner = document.getElementById('quizScoreBanner');
                 const scorePercent = Math.round((quizScore.correct / quizScore.total) * 100);
@@ -580,7 +583,6 @@
                 document.getElementById('passageTitle').innerText = "📌 " + (data.title || "영어 지문 분석");
                 document.getElementById('fullTranslation').innerText = data.full_translation || "";
 
-                // [신규 1] 사전 핵심 어휘 랜더링
                 if (data.key_vocabulary && data.key_vocabulary.length > 0) {
                     let preVocabHtml = `<table class="vocab-table">
                         <thead><tr><th>표현 (Word)</th><th>품사</th><th>뜻 (Meaning)</th><th>유의어</th></tr></thead><tbody>`;
@@ -599,7 +601,6 @@
                     document.getElementById('preVocabCard').style.display = 'none';
                 }
 
-                // 문장별 분석지 랜더링
                 let sentenceCardsHtml = "";
                 if (data.segmented_text && data.segmented_text.length > 0) {
                     let sentences = [];
@@ -695,7 +696,6 @@
                     mermaid.run({ nodes: [graphDiv] });
                 }
 
-                // [신규 2] 단어 퀴즈 생성
                 generateQuiz();
 
                 document.getElementById('outputArea').style.display = 'block';
