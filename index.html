@@ -40,9 +40,21 @@
             color: white;
             border-radius: 16px;
             box-shadow: 0 8px 20px rgba(30, 58, 138, 0.2);
+            position: relative;
         }
         header h1 { font-size: 24px; font-weight: 800; }
         header p { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+
+        .student-badge {
+            display: inline-block;
+            background: #fef08a;
+            color: #854d0e;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-top: 8px;
+        }
 
         .card { 
             background: var(--card-bg); 
@@ -61,8 +73,8 @@
             border-bottom: 2px solid #e2e8f0;
             padding-bottom: 8px;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 8px;
         }
 
         textarea { 
@@ -77,20 +89,64 @@
         }
         textarea:focus { border-color: var(--primary-color); outline: none; }
         
-        button.btn-primary { 
-            background-color: var(--primary-color); 
-            color: white; 
-            padding: 14px 24px; 
+        .btn-group { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+        button { 
+            padding: 10px 18px; 
             border: none; 
             border-radius: 10px; 
             font-weight: 700; 
             cursor: pointer; 
-            font-size: 16px; 
-            width: 100%;
-            margin-top: 10px;
-            transition: background 0.2s;
+            font-size: 14px; 
+            transition: all 0.2s;
         }
+        button.btn-primary { background-color: var(--primary-color); color: white; flex: 2; }
         button.btn-primary:hover { background-color: #1e40af; }
+        button.btn-share { background-color: #059669; color: white; flex: 1; }
+        button.btn-share:hover { background-color: #047857; }
+        button.btn-student { background-color: #64748b; color: white; flex: 1; }
+        button.btn-student:hover { background-color: #475569; }
+        button.btn-sub { background-color: #e2e8f0; color: #334155; font-size: 12px; padding: 6px 12px; }
+        button.btn-sub:hover { background-color: #cbd5e1; }
+
+        /* 보기 제어 컨트롤 패널 (토글 버튼) */
+        .control-panel {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            background: #f1f5f9;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            align-items: center;
+            border: 1px solid #cbd5e1;
+        }
+        .control-panel label {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            user-select: none;
+            background: #ffffff;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+        }
+        .control-panel input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        /* 사전 단어 카드 테이블 */
+        .vocab-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .vocab-table th, .vocab-table td { border: 1px solid #e2e8f0; padding: 10px 12px; font-size: 14px; }
+        .vocab-table th { background-color: #f1f5f9; text-align: left; }
+        .meaning-hidden { background-color: #334155 !important; color: #334155 !important; user-select: none; border-radius: 4px; }
 
         /* 문장별 내신 분석 카드 */
         .sentence-card {
@@ -126,12 +182,7 @@
             border-radius: 8px;
             border: 1px solid #e2e8f0;
         }
-        .chunk-en { 
-            font-size: 19px; 
-            font-weight: 600; 
-            color: #0f172a; 
-            line-height: 1.6;
-        }
+        .chunk-en { font-size: 19px; font-weight: 600; color: #0f172a; line-height: 1.6; }
         .chunk-kr { 
             font-size: 13.5px; 
             color: #475569; 
@@ -141,7 +192,7 @@
             padding-top: 2px;
         }
 
-        /* 모든 단어 툴팁 스타일 (눈이 피로하지 않으면서 100% 반응) */
+        /* 단어 툴팁 스타일 */
         .word-item { 
             position: relative; 
             display: inline-block; 
@@ -156,7 +207,6 @@
             color: #854d0e;
             border-bottom-color: #eab308;
         }
-        /* 툴팁 말풍선 디자인 */
         .word-item:hover::after {
             content: attr(data-meaning);
             position: absolute; 
@@ -175,15 +225,25 @@
             pointer-events: none;
         }
 
-        /* 구문 분석 태그 스타일 (S, V, O, C, M 배지) */
+        /* 구문 분석 & 수식관계 박스 */
         .syntax-box {
             background: #f1f5f9;
             border-radius: 8px;
-            padding: 12px 14px;
+            padding: 10px 14px;
             font-size: 14.5px;
             border: 1px dashed #cbd5e1;
             margin-top: 10px;
         }
+        .modifier-box {
+            background: #f0fdf4;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 14px;
+            border: 1px solid #bbf7d0;
+            margin-top: 6px;
+            color: #166534;
+        }
+
         .badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 800; color: white; margin: 0 2px; }
         .badge-s { background-color: var(--subject-color); }
         .badge-v { background-color: var(--verb-color); }
@@ -199,103 +259,347 @@
             font-size: 14px;
         }
 
-        .vocab-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .vocab-table th, .vocab-table td { border: 1px solid #e2e8f0; padding: 10px 12px; font-size: 14px; }
-        .vocab-table th { background-color: #f1f5f9; text-align: left; }
-        .vocab-table tr:nth-child(even) { background-color: #f8fafc; }
+        /* 단어 퀴즈 영역 */
+        .quiz-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 14px;
+        }
+        .quiz-question { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+        .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .quiz-opt-btn {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 14px;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .quiz-opt-btn:hover { background: #e0e7ff; border-color: #818cf8; }
+        .quiz-opt-btn.correct { background: #dcfce7 !important; border-color: #22c55e !important; color: #15803d !important; font-weight: 700; }
+        .quiz-opt-btn.wrong { background: #fee2e2 !important; border-color: #ef4444 !important; color: #b91c1c !important; }
+        .quiz-score-banner {
+            background: #3b82f6;
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 800;
+            margin-bottom: 16px;
+            font-size: 16px;
+        }
 
         .mermaid { display: flex; justify-content: center; background: #fafafa; padding: 16px; border-radius: 8px; }
+
+        /* 토글 숨김 클래스 */
+        .is-hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>📖 고등 내신 분석용 한 줄 학습기</h1>
-        <p>전체 단어 툴팁 지원 · 문장별 직독직해 · 구문 분석지</p>
+        <h1>📖 고등 내신 분석용 한 줄 영어 학습기</h1>
+        <p>전체 단어 툴팁 · 구문 분석지 · 사전 단어 학습 및 객관식 퀴즈 지원</p>
+        <div id="studentBadge" class="student-badge" style="display:none;">🎓 학생 열람 전용 모드</div>
     </header>
     
-    <div class="card">
-        <div class="section-title">📥 AI 분석 JSON 데이터 입력</div>
+    <!-- 1. 선생님용 JSON 입력 창 -->
+    <div class="card" id="jsonInputCard">
+        <div class="section-title"><span>📥 AI 분석 JSON 데이터 입력</span></div>
         <textarea id="jsonInput" placeholder="AI가 생성해준 JSON 코드를 여기에 붙여넣으세요..."></textarea>
-        <button class="btn-primary" onclick="renderApp()">시각화 분석지 생성하기</button>
+        <div class="btn-group">
+            <button class="btn-primary" onclick="renderApp()">시각화 분석지 생성하기</button>
+            <button class="btn-share" onclick="copyShareUrl()">🔗 학생용 공유 링크 복사</button>
+            <button class="btn-student" onclick="toggleStudentView()">🎓 입력창 숨기기</button>
+        </div>
     </div>
 
+    <!-- 2. 분석지 결과 출력 영역 -->
     <div id="outputArea" style="display:none;">
+        
+        <!-- 온/오프 토글 제어 패널 -->
+        <div class="control-panel">
+            <span style="font-weight: 800; font-size: 14px; color: var(--primary-color);">⚙️ 보기 설정:</span>
+            <label><input type="checkbox" id="chkSyntax" checked onchange="applyToggles()"> 구문분석 (S/V/O/C)</label>
+            <label><input type="checkbox" id="chkModifier" checked onchange="applyToggles()"> 수식관계 (->)</label>
+            <label><input type="checkbox" id="chkGrammar" checked onchange="applyToggles()"> 주요 어법 팁</label>
+            <label><input type="checkbox" id="chkChunkTranslation" checked onchange="applyToggles()"> 직독직해 해석</label>
+        </div>
+
         <div class="card" style="text-align: center; background: #eff6ff; border-color: #bfdbfe;">
             <h2 id="passageTitle" style="color: #1e40af; font-size: 22px;"></h2>
         </div>
 
+        <!-- [신규 1] 지문 공부 전 핵심 어휘 사전 학습 -->
+        <div class="card" id="preVocabCard">
+            <div class="section-title">
+                <span>📚 [학습 전] 핵심 어휘 암기노트</span>
+                <button class="btn-sub" onclick="toggleMeaningHide()">👁️ 뜻 가리기 / 보이기</button>
+            </div>
+            <div id="preVocabArea"></div>
+        </div>
+
+        <!-- 문장별 분석 -->
         <div class="card">
-            <div class="section-title">🔍 문장별 직독직해 & 구문 분석지 (단어 마우스 hover 지원)</div>
+            <div class="section-title"><span>🔍 [학습 중] 문장별 직독직해 & 구문 분석지</span></div>
             <div id="sentenceCardsArea"></div>
         </div>
 
         <div class="card">
-            <div class="section-title">📊 지문 흐름도 (Structure Chart)</div>
+            <div class="section-title"><span>📊 지문 흐름도 (Structure Chart)</span></div>
             <div class="mermaid" id="mermaidGraph"></div>
         </div>
 
-        <div class="card">
-            <div class="section-title">💡 주요 어법 & 내신 출제 포인트</div>
+        <div class="card" id="grammarCard">
+            <div class="section-title"><span>💡 주요 어법 & 내신 출제 포인트</span></div>
             <div id="grammarSummaryArea"></div>
         </div>
 
         <div class="card">
-            <div class="section-title">📚 핵심 어휘 및 주요 숙어 분석표</div>
-            <div id="vocabArea"></div>
-        </div>
-
-        <div class="card">
-            <div class="section-title">📄 전체 자연스러운 해석</div>
+            <div class="section-title"><span>📄 전체 자연스러운 해석</span></div>
             <p id="fullTranslation" style="line-height: 2; white-space: pre-line; font-size: 15.5px; color: #334155;"></p>
         </div>
+
+        <!-- [신규 2] 학습 후 단어 확인 퀴즈 -->
+        <div class="card" id="quizCard">
+            <div class="section-title">
+                <span>🧩 [학습 후] 실시간 단어 퀴즈 (Vocab Quiz)</span>
+                <button class="btn-sub" onclick="generateQuiz()">🔄 퀴즈 다시 풀기</button>
+            </div>
+            <div id="quizScoreBanner" class="quiz-score-banner" style="display:none;"></div>
+            <div id="quizArea"></div>
+        </div>
+
     </div>
 
     <script>
         mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
 
-        // 100% 모든 단어 매칭 및 툴팁 반환 알고리즘
+        let globalData = null;
+        let isMeaningHidden = false;
+        let quizScore = { correct: 0, answered: 0, total: 0 };
+
+        function utf8_to_b64(str) { return window.btoa(unescape(encodeURIComponent(str))); }
+        function b64_to_utf8(str) { return decodeURIComponent(escape(window.atob(str))); }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const dataParam = urlParams.get('data');
+            if (dataParam) {
+                try {
+                    const jsonStr = b64_to_utf8(decodeURIComponent(dataParam));
+                    document.getElementById('jsonInput').value = jsonStr;
+                    document.getElementById('jsonInputCard').style.display = 'none';
+                    document.getElementById('studentBadge').style.display = 'inline-block';
+                    renderApp();
+                } catch (e) {
+                    console.error("공유 데이터 복원 실패:", e);
+                }
+            }
+        });
+
+        function copyShareUrl() {
+            const rawInput = document.getElementById('jsonInput').value.trim();
+            if (!rawInput) {
+                alert("먼저 JSON 데이터를 입력하고 [시각화 분석지 생성하기]를 클릭해주세요.");
+                return;
+            }
+            try {
+                const encoded = encodeURIComponent(utf8_to_b64(rawInput));
+                const shareUrl = window.location.origin + window.location.pathname + '?data=' + encoded;
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert("학생용 공유 링크가 클립보드에 복사되었습니다!\n학생들에게 이 링크를 전달해주시면 바로 분석지가 열립니다.");
+                });
+            } catch (e) {
+                alert("링크 생성 중 오류가 발생했습니다.");
+            }
+        }
+
+        function toggleStudentView() {
+            const card = document.getElementById('jsonInputCard');
+            if (card.style.display === 'none') {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+                document.getElementById('studentBadge').style.display = 'inline-block';
+            }
+        }
+
+        function applyToggles() {
+            const showSyntax = document.getElementById('chkSyntax').checked;
+            const showModifier = document.getElementById('chkModifier').checked;
+            const showGrammar = document.getElementById('chkGrammar').checked;
+            const showChunkTrans = document.getElementById('chkChunkTranslation').checked;
+
+            document.querySelectorAll('.syntax-box').forEach(el => {
+                if (showSyntax) el.classList.remove('is-hidden'); else el.classList.add('is-hidden');
+            });
+            document.querySelectorAll('.modifier-box').forEach(el => {
+                if (showModifier) el.classList.remove('is-hidden'); else el.classList.add('is-hidden');
+            });
+            const grammarCard = document.getElementById('grammarCard');
+            if (showGrammar) grammarCard.classList.remove('is-hidden'); else grammarCard.classList.add('is-hidden');
+
+            document.querySelectorAll('.chunk-kr').forEach(el => {
+                if (showChunkTrans) el.classList.remove('is-hidden'); else el.classList.add('is-hidden');
+            });
+        }
+
+        // 사전 어휘 뜻 가리기 토글
+        function toggleMeaningHide() {
+            isMeaningHidden = !isMeaningHidden;
+            document.querySelectorAll('.vocab-meaning-td').forEach(td => {
+                if (isMeaningHidden) td.classList.add('meaning-hidden');
+                else td.classList.remove('meaning-hidden');
+            });
+        }
+
         function findWordMeaning(rawWord, wordSource) {
             if (!wordSource) return null;
-            
-            // 알파벳과 아포스트로피만 남김
             let clean = rawWord.replace(/[^a-zA-Z']/g, "").toLowerCase();
             if (!clean) return null;
 
-            // 1. Array 형식 검색
             if (Array.isArray(wordSource)) {
-                // 완전 일치
                 let match = wordSource.find(w => w.word.toLowerCase().replace(/[^a-zA-Z']/g, "") === clean);
                 if (match) return match.meaning;
 
-                // 어근/접미사 변환 매칭 (-s, -ed, -ing, -d 등)
                 match = wordSource.find(w => {
                     let target = w.word.toLowerCase().replace(/[^a-zA-Z']/g, "");
                     return (clean.startsWith(target) && clean.length - target.length <= 4) ||
                            (target.startsWith(clean) && target.length - clean.length <= 3);
                 });
                 if (match) return match.meaning;
-            } 
-            // 2. Object (Key-Value) 형식 검색
-            else if (typeof wordSource === 'object') {
-                if (wordSource[clean]) return wordSource[clean];
-                let keys = Object.keys(wordSource);
-                let foundKey = keys.find(k => k.toLowerCase().replace(/[^a-zA-Z']/g, "") === clean);
-                if (foundKey) return wordSource[foundKey];
+            }
+            return null;
+        }
+
+        // 실시간 4지선다 단어 퀴즈 생성 함수
+        function generateQuiz() {
+            if (!globalData || !globalData.key_vocabulary || globalData.key_vocabulary.length === 0) {
+                document.getElementById('quizCard').style.display = 'none';
+                return;
             }
 
-            return null;
+            const vocabList = globalData.key_vocabulary;
+            quizScore = { correct: 0, answered: 0, total: vocabList.length };
+            
+            document.getElementById('quizScoreBanner').style.display = 'none';
+
+            let quizHtml = "";
+
+            vocabList.forEach((item, qIdx) => {
+                let correctMeaning = item.meaning;
+                
+                // 오답 보기 추출 (다른 단어들의 뜻)
+                let otherMeanings = vocabList
+                    .filter(v => v.meaning !== correctMeaning)
+                    .map(v => v.meaning);
+                
+                // 오답 무작위 셔플 후 3개 선택
+                otherMeanings.sort(() => Math.random() - 0.5);
+                let options = [correctMeaning, ...otherMeanings.slice(0, 3)];
+
+                // 보기가 4개가 안 될 경우 기본 더미 보기 보충
+                const dummyOptions = ["영향을 미치다", "중요한", "결과적으로", "설명하다", "분석하다"];
+                while (options.length < 4) {
+                    let dummy = dummyOptions[Math.floor(Math.random() * dummyOptions.length)];
+                    if (!options.includes(dummy)) options.push(dummy);
+                }
+
+                // 전체 보기 셔플
+                options.sort(() => Math.random() - 0.5);
+
+                quizHtml += `
+                <div class="quiz-item" id="quiz-item-${qIdx}">
+                    <div class="quiz-question">
+                        Q${qIdx + 1}. <strong style="color:var(--primary-color); font-size:18px;">${item.word}</strong> 
+                        <span style="font-size:13px; color:#64748b; font-weight:normal;">(${item.pos || '단어'})</span>의 뜻은?
+                    </div>
+                    <div class="quiz-options">`;
+                
+                options.forEach(opt => {
+                    const isCorrect = (opt === correctMeaning);
+                    quizHtml += `<button class="quiz-opt-btn" onclick="checkAnswer(${qIdx}, ${isCorrect}, this)">${opt}</button>`;
+                });
+
+                quizHtml += `</div></div>`;
+            });
+
+            document.getElementById('quizArea').innerHTML = quizHtml;
+        }
+
+        // 퀴즈 정답 채점 함수
+        function checkAnswer(qIdx, isCorrect, btnEl) {
+            const parent = document.getElementById(`quiz-item-${qIdx}`);
+            const buttons = parent.querySelectorAll('.quiz-opt-btn');
+            
+            // 이미 푼 문제는 입력 방지
+            if (parent.dataset.answered) return;
+            parent.dataset.answered = "true";
+
+            quizScore.answered++;
+
+            buttons.forEach(btn => {
+                btn.style.cursor = 'default';
+            });
+
+            if (isCorrect) {
+                btnEl.classList.add('correct');
+                quizScore.correct++;
+            } else {
+                btnEl.classList.add('wrong');
+                // 정답 보기 초록색으로 힌트 표시
+                buttons.forEach(btn => {
+                    if (btn.innerText === globalData.key_vocabulary[qIdx].meaning) {
+                        btn.classList.add('correct');
+                    }
+                });
+            }
+
+            // 전체 다 풀었을 때 상단 스코어 뷰
+            if (quizScore.answered === quizScore.total) {
+                const banner = document.getElementById('quizScoreBanner');
+                const scorePercent = Math.round((quizScore.correct / quizScore.total) * 100);
+                banner.innerText = `🎉 퀴즈 완료! 총 ${quizScore.total}문제 중 ${quizScore.correct}개 맞춤 (${scorePercent}점)`;
+                banner.style.display = 'block';
+            }
         }
 
         function renderApp() {
             try {
                 let rawInput = document.getElementById('jsonInput').value.trim();
                 rawInput = rawInput.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
-                const data = JSON.parse(rawInput);
+                globalData = JSON.parse(rawInput);
+                const data = globalData;
                 
                 document.getElementById('passageTitle').innerText = "📌 " + (data.title || "영어 지문 분석");
                 document.getElementById('fullTranslation').innerText = data.full_translation || "";
 
+                // [신규 1] 사전 핵심 어휘 랜더링
+                if (data.key_vocabulary && data.key_vocabulary.length > 0) {
+                    let preVocabHtml = `<table class="vocab-table">
+                        <thead><tr><th>표현 (Word)</th><th>품사</th><th>뜻 (Meaning)</th><th>유의어</th></tr></thead><tbody>`;
+                    data.key_vocabulary.forEach(v => {
+                        preVocabHtml += `<tr>
+                            <td><strong style="color:#1e40af; font-size:15px;">${v.word}</strong></td>
+                            <td>${v.pos || '-'}</td>
+                            <td class="vocab-meaning-td"><strong>${v.meaning}</strong></td>
+                            <td>${v.synonym || '-'}</td>
+                        </tr>`;
+                    });
+                    preVocabHtml += "</tbody></table>";
+                    document.getElementById('preVocabArea').innerHTML = preVocabHtml;
+                    document.getElementById('preVocabCard').style.display = 'block';
+                } else {
+                    document.getElementById('preVocabCard').style.display = 'none';
+                }
+
+                // 문장별 분석지 랜더링
                 let sentenceCardsHtml = "";
                 if (data.segmented_text && data.segmented_text.length > 0) {
                     let sentences = [];
@@ -328,7 +632,6 @@
                                 if (meaning) {
                                     chunkWordsHtml += `<span class="word-item" data-meaning="${meaning}">${w}</span> `;
                                 } else {
-                                    // 단어장에 없을 경우 단어 자체 표기
                                     chunkWordsHtml += `<span class="word-item" data-meaning="${w}">${w}</span> `;
                                 }
                             });
@@ -356,9 +659,15 @@
 
                                 sentenceCardsHtml += `
                                 <div class="syntax-box">
-                                    <strong>📌 구문 분석:</strong> ${formattedAnalysis}<br>
-                                    <small style="color:#64748b; display:block; margin-top:2px;">💡 ${matchSyntax.modifier_relation || ''}</small>
+                                    <strong>📌 구문 분석:</strong> ${formattedAnalysis}
                                 </div>`;
+
+                                if (matchSyntax.modifier_relation) {
+                                    sentenceCardsHtml += `
+                                    <div class="modifier-box">
+                                        <strong>🔗 수식 관계 및 구조:</strong> ${matchSyntax.modifier_relation}
+                                    </div>`;
+                                }
                             }
                         }
 
@@ -379,21 +688,6 @@
                     document.getElementById('grammarSummaryArea').innerHTML = grammarHtml;
                 }
 
-                if (data.key_vocabulary) {
-                    let vocabHtml = `<table class="vocab-table">
-                        <thead><tr><th>표현 (Word/Phrase)</th><th>품사</th><th>뜻</th><th>유의어</th></tr></thead><tbody>`;
-                    data.key_vocabulary.forEach(v => {
-                        vocabHtml += `<tr>
-                            <td><strong style="color:#1e40af;">${v.word}</strong></td>
-                            <td>${v.pos || '-'}</td>
-                            <td><strong>${v.meaning}</strong></td>
-                            <td>${v.synonym || '-'}</td>
-                        </tr>`;
-                    });
-                    vocabHtml += "</tbody></table>";
-                    document.getElementById('vocabArea').innerHTML = vocabHtml;
-                }
-
                 if (data.structure_chart) {
                     const graphDiv = document.getElementById('mermaidGraph');
                     graphDiv.removeAttribute('data-processed');
@@ -401,7 +695,11 @@
                     mermaid.run({ nodes: [graphDiv] });
                 }
 
+                // [신규 2] 단어 퀴즈 생성
+                generateQuiz();
+
                 document.getElementById('outputArea').style.display = 'block';
+                applyToggles();
             } catch (e) {
                 console.error(e);
                 alert('JSON 데이터 변환 중 오류가 발생했습니다.');
