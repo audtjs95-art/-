@@ -8,7 +8,7 @@
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <!-- Mermaid.js -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-    <!-- LZ-String 초고압축 라이브러리 (URL 길이 문제 해결) -->
+    <!-- LZ-String 압축 라이브러리 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
     
     <style>
@@ -79,11 +79,27 @@
             align-items: center;
         }
 
+        /* 파일 드래그 앤 드롭 존 */
+        .file-drop-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 16px;
+        }
+        .file-drop-zone:hover {
+            border-color: var(--primary-color);
+            background: #eff6ff;
+        }
+
         textarea { 
             width: 100%; 
-            height: 120px; 
+            height: 100px; 
             padding: 12px; 
-            border: 2px solid #cbd5e1; 
+            border: 1px solid #cbd5e1; 
             border-radius: 10px; 
             font-size: 13px;
             font-family: monospace;
@@ -93,7 +109,7 @@
         
         .btn-group { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 
-        button { 
+        button, .file-label-btn { 
             padding: 10px 18px; 
             border: none; 
             border-radius: 10px; 
@@ -101,17 +117,15 @@
             cursor: pointer; 
             font-size: 14px; 
             transition: all 0.2s;
+            display: inline-block;
+            text-align: center;
         }
         button.btn-primary { background-color: var(--primary-color); color: white; flex: 2; }
         button.btn-primary:hover { background-color: #1e40af; }
-        button.btn-share { background-color: #059669; color: white; flex: 1; }
-        button.btn-share:hover { background-color: #047857; }
         button.btn-student { background-color: #64748b; color: white; flex: 1; }
-        button.btn-student:hover { background-color: #475569; }
         button.btn-sub { background-color: #e2e8f0; color: #334155; font-size: 12px; padding: 6px 12px; }
-        button.btn-sub:hover { background-color: #cbd5e1; }
 
-        /* 보기 제어 컨트롤 패널 (토글 버튼) */
+        /* 보기 제어 컨트롤 패널 */
         .control-panel {
             display: flex;
             gap: 12px;
@@ -131,17 +145,10 @@
             align-items: center;
             gap: 6px;
             cursor: pointer;
-            user-select: none;
             background: #ffffff;
             padding: 6px 12px;
             border-radius: 8px;
             border: 1px solid #cbd5e1;
-        }
-        .control-panel input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--primary-color);
-            cursor: pointer;
         }
 
         /* 사전 단어 카드 테이블 */
@@ -202,12 +209,10 @@
             padding: 0 2px;
             border-bottom: 1.5px dotted #3b82f6;
             border-radius: 3px;
-            transition: all 0.15s ease;
         }
         .word-item:hover { 
             background-color: #fef08a; 
             color: #854d0e;
-            border-bottom-color: #eab308;
         }
         .word-item:hover::after {
             content: attr(data-meaning);
@@ -280,25 +285,11 @@
             font-size: 14px;
             color: #334155;
             cursor: pointer;
-            transition: all 0.15s;
         }
-        .quiz-opt-btn:hover { background: #e0e7ff; border-color: #818cf8; }
         .quiz-opt-btn.correct { background: #dcfce7 !important; border-color: #22c55e !important; color: #15803d !important; font-weight: 700; }
         .quiz-opt-btn.wrong { background: #fee2e2 !important; border-color: #ef4444 !important; color: #b91c1c !important; }
-        .quiz-score-banner {
-            background: #3b82f6;
-            color: white;
-            padding: 12px;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: 800;
-            margin-bottom: 16px;
-            font-size: 16px;
-        }
 
         .mermaid { display: flex; justify-content: center; background: #fafafa; padding: 16px; border-radius: 8px; }
-
-        /* 토글 숨김 클래스 */
         .is-hidden { display: none !important; }
     </style>
 </head>
@@ -307,24 +298,31 @@
     <header>
         <h1>📖 고등 내신 분석용 한 줄 영어 학습기</h1>
         <p>전체 단어 툴팁 · 구문 분석지 · 사전 단어 학습 및 객관식 퀴즈 지원</p>
-        <div id="studentBadge" class="student-badge" style="display:none;">🎓 학생 열람 전용 모드</div>
+        <div id="studentBadge" class="student-badge" style="display:none;">🎓 학습 데이터 로드 완료</div>
     </header>
     
-    <!-- 1. 선생님용 JSON 입력 창 -->
+    <!-- 입력 창 카드 -->
     <div class="card" id="jsonInputCard">
-        <div class="section-title"><span>📥 AI 분석 JSON 데이터 입력</span></div>
-        <textarea id="jsonInput" placeholder="AI가 생성해준 JSON 코드를 여기에 붙여넣으세요..."></textarea>
+        <div class="section-title"><span>📥 데이터 불러오기</span></div>
+        
+        <!-- 파일 업로드 존 -->
+        <div class="file-drop-zone" onclick="document.getElementById('fileInput').click()">
+            <p style="font-weight: 700; color: var(--primary-color);">📁 [선생님이 공유해준 파일 선택] 또는 여기에 드래그</p>
+            <p style="font-size: 12px; color: #64748b; margin-top: 4px;">(.json 또는 .txt 파일 지원)</p>
+            <input type="file" id="fileInput" accept=".json,.txt" style="display: none;" onchange="handleFileSelect(event)">
+        </div>
+
+        <p style="font-size: 12px; color: #64748b; margin-bottom: 6px; text-align: center;">--- 또는 AI가 생성한 JSON 코드 직접 붙여넣기 ---</p>
+        <textarea id="jsonInput" placeholder="JSON 코드를 여기에 붙여넣으세요..."></textarea>
+        
         <div class="btn-group">
             <button class="btn-primary" onclick="renderApp()">시각화 분석지 생성하기</button>
-            <button class="btn-share" onclick="copyShareUrl()">🔗 학생용 공유 링크 복사</button>
-            <button class="btn-student" onclick="toggleStudentView()">🎓 입력창 숨기기</button>
+            <button class="btn-student" onclick="toggleStudentView()">👁️ 입력창 가리기/열기</button>
         </div>
     </div>
 
-    <!-- 2. 분석지 결과 출력 영역 -->
+    <!-- 분석지 결과 출력 영역 -->
     <div id="outputArea" style="display:none;">
-        
-        <!-- 온/오프 토글 제어 패널 -->
         <div class="control-panel">
             <span style="font-weight: 800; font-size: 14px; color: var(--primary-color);">⚙️ 보기 설정:</span>
             <label><input type="checkbox" id="chkSyntax" checked onchange="applyToggles()"> 구문분석 (S/V/O/C)</label>
@@ -337,7 +335,6 @@
             <h2 id="passageTitle" style="color: #1e40af; font-size: 22px;"></h2>
         </div>
 
-        <!-- 핵심 어휘 사전 학습 -->
         <div class="card" id="preVocabCard">
             <div class="section-title">
                 <span>📚 [학습 전] 핵심 어휘 암기노트</span>
@@ -346,7 +343,6 @@
             <div id="preVocabArea"></div>
         </div>
 
-        <!-- 문장별 분석 -->
         <div class="card">
             <div class="section-title"><span>🔍 [학습 중] 문장별 직독직해 & 구문 분석지</span></div>
             <div id="sentenceCardsArea"></div>
@@ -367,13 +363,12 @@
             <p id="fullTranslation" style="line-height: 2; white-space: pre-line; font-size: 15.5px; color: #334155;"></p>
         </div>
 
-        <!-- 학습 후 단어 확인 퀴즈 -->
         <div class="card" id="quizCard">
             <div class="section-title">
                 <span>🧩 [학습 후] 실시간 단어 퀴즈 (Vocab Quiz)</span>
                 <button class="btn-sub" onclick="generateQuiz()">🔄 퀴즈 다시 풀기</button>
             </div>
-            <div id="quizScoreBanner" class="quiz-score-banner" style="display:none;"></div>
+            <div id="quizScoreBanner" style="display:none; background:#3b82f6; color:white; padding:12px; border-radius:10px; text-align:center; font-weight:800; margin-bottom:16px;"></div>
             <div id="quizArea"></div>
         </div>
 
@@ -384,10 +379,32 @@
 
         let globalData = null;
         let isMeaningHidden = false;
-        let quizScore = { correct: 0, answered: 0, total: 0 };
 
-        // 압축 데이터 수신 처리 (페이지 로드 시 & 해시 변경 시)
-        function loadFromHash() {
+        // 페이지 로드 시 URL 파라미터(?file=passage1.json) 또는 Hash(#data=...) 체크
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const fileName = urlParams.get('file');
+
+            // 1. URL에 ?file=파일명.json 지정되어 있을 경우 자동 로드
+            if (fileName) {
+                fetch(fileName)
+                    .then(res => {
+                        if (!res.ok) throw new Error("파일을 찾을 수 없습니다.");
+                        return res.json();
+                    })
+                    .then(data => {
+                        globalData = data;
+                        document.getElementById('jsonInputCard').style.display = 'none';
+                        document.getElementById('studentBadge').style.display = 'inline-block';
+                        renderFromData();
+                    })
+                    .catch(err => {
+                        alert(`'${fileName}' 파일을 불러오지 못했습니다. 파일명을 확인해 주세요.`);
+                    });
+                return;
+            }
+
+            // 2. Hash(#data=) 압축 데이터 체크 (보조)
             const hash = window.location.hash;
             if (hash && hash.includes('data=')) {
                 try {
@@ -399,52 +416,28 @@
                         document.getElementById('studentBadge').style.display = 'inline-block';
                         renderApp();
                     }
-                } catch (e) {
-                    console.error("공유 데이터 복원 실패:", e);
-                    alert("공유 데이터가 훼손되었거나 읽을 수 없습니다.");
-                }
+                } catch (e) {}
             }
-        }
+        });
 
-        window.addEventListener('DOMContentLoaded', loadFromHash);
-        window.addEventListener('hashchange', loadFromHash);
+        // 파일 첨부 드래그 & 드롭 / 선택 처리
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
 
-        // 초고압축 LZString을 활용한 안정적인 학생 공유 링크 생성
-        function copyShareUrl() {
-            const rawInput = document.getElementById('jsonInput').value.trim();
-            if (!rawInput) {
-                alert("먼저 JSON 데이터를 입력하고 [시각화 분석지 생성하기]를 클릭해주세요.");
-                return;
-            }
-            try {
-                // 1. JSON 데이터 초고압축
-                const compressed = LZString.compressToEncodedURIComponent(rawInput);
-                // 2. Hash(#) 기반 URL 생성 (서버 414 에러 완벽 우회)
-                const shareUrl = window.location.origin + window.location.pathname + '#data=' + compressed;
-                
-                // 3. 클립보드 복사
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(shareUrl).then(() => {
-                        alert("✅ 학생용 공유 링크가 클립보드에 복사되었습니다!\n학생들에게 전송하시면 바로 열립니다.");
-                    }).catch(() => {
-                        prompt("아래 생성된 공유 링크를 복사(Ctrl+C)해서 사용하세요:", shareUrl);
-                    });
-                } else {
-                    prompt("아래 생성된 공유 링크를 복사(Ctrl+C)해서 사용하세요:", shareUrl);
-                }
-            } catch (e) {
-                alert("링크 생성 중 오류가 발생했습니다: " + e.message);
-            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('jsonInput').value = e.target.result;
+                renderApp();
+                document.getElementById('jsonInputCard').style.display = 'none';
+                document.getElementById('studentBadge').style.display = 'inline-block';
+            };
+            reader.readAsText(file);
         }
 
         function toggleStudentView() {
             const card = document.getElementById('jsonInputCard');
-            if (card.style.display === 'none') {
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
-                document.getElementById('studentBadge').style.display = 'inline-block';
-            }
+            card.style.display = (card.style.display === 'none') ? 'block' : 'none';
         }
 
         function applyToggles() {
@@ -453,26 +446,15 @@
             const showGrammar = document.getElementById('chkGrammar').checked;
             const showChunkTrans = document.getElementById('chkChunkTranslation').checked;
 
-            document.querySelectorAll('.syntax-box').forEach(el => {
-                if (showSyntax) el.classList.remove('is-hidden'); else el.classList.add('is-hidden');
-            });
-            document.querySelectorAll('.modifier-box').forEach(el => {
-                if (showModifier) el.classList.remove('is-hidden'); else el.classList.add('is-hidden');
-            });
-            const grammarCard = document.getElementById('grammarCard');
-            if (showGrammar) grammarCard.classList.remove('is-hidden'); else grammarCard.classList.add('is-hidden');
-
-            document.querySelectorAll('.chunk-kr').forEach(el => {
-                if (showChunkTrans) el.classList.remove('is-hidden'); else el.classList.add('is-hidden');
-            });
+            document.querySelectorAll('.syntax-box').forEach(el => el.classList.toggle('is-hidden', !showSyntax));
+            document.querySelectorAll('.modifier-box').forEach(el => el.classList.toggle('is-hidden', !showModifier));
+            document.getElementById('grammarCard').classList.toggle('is-hidden', !showGrammar);
+            document.querySelectorAll('.chunk-kr').forEach(el => el.classList.toggle('is-hidden', !showChunkTrans));
         }
 
         function toggleMeaningHide() {
             isMeaningHidden = !isMeaningHidden;
-            document.querySelectorAll('.vocab-meaning-td').forEach(td => {
-                if (isMeaningHidden) td.classList.add('meaning-hidden');
-                else td.classList.remove('meaning-hidden');
-            });
+            document.querySelectorAll('.vocab-meaning-td').forEach(td => td.classList.toggle('meaning-hidden', isMeaningHidden));
         }
 
         function findWordMeaning(rawWord, wordSource) {
@@ -483,15 +465,141 @@
             if (Array.isArray(wordSource)) {
                 let match = wordSource.find(w => w.word.toLowerCase().replace(/[^a-zA-Z']/g, "") === clean);
                 if (match) return match.meaning;
-
-                match = wordSource.find(w => {
-                    let target = w.word.toLowerCase().replace(/[^a-zA-Z']/g, "");
-                    return (clean.startsWith(target) && clean.length - target.length <= 4) ||
-                           (target.startsWith(clean) && target.length - clean.length <= 3);
-                });
-                if (match) return match.meaning;
             }
             return null;
+        }
+
+        function renderApp() {
+            try {
+                let rawInput = document.getElementById('jsonInput').value.trim();
+                rawInput = rawInput.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
+                globalData = JSON.parse(rawInput);
+                renderFromData();
+            } catch (e) {
+                alert('올바른 JSON 코드가 아닙니다.');
+            }
+        }
+
+        function renderFromData() {
+            const data = globalData;
+            document.getElementById('passageTitle').innerText = "📌 " + (data.title || "영어 지문 분석");
+            document.getElementById('fullTranslation').innerText = data.full_translation || "";
+
+            if (data.key_vocabulary && data.key_vocabulary.length > 0) {
+                let preVocabHtml = `<table class="vocab-table">
+                    <thead><tr><th>표현 (Word)</th><th>품사</th><th>뜻 (Meaning)</th><th>유의어</th></tr></thead><tbody>`;
+                data.key_vocabulary.forEach(v => {
+                    preVocabHtml += `<tr>
+                        <td><strong style="color:#1e40af; font-size:15px;">${v.word}</strong></td>
+                        <td>${v.pos || '-'}</td>
+                        <td class="vocab-meaning-td"><strong>${v.meaning}</strong></td>
+                        <td>${v.synonym || '-'}</td>
+                    </tr>`;
+                });
+                preVocabHtml += "</tbody></table>";
+                document.getElementById('preVocabArea').innerHTML = preVocabHtml;
+                document.getElementById('preVocabCard').style.display = 'block';
+            } else {
+                document.getElementById('preVocabCard').style.display = 'none';
+            }
+
+            let sentenceCardsHtml = "";
+            if (data.segmented_text && data.segmented_text.length > 0) {
+                let sentences = [];
+                let currentSentence = [];
+
+                data.segmented_text.forEach(item => {
+                    currentSentence.push(item);
+                    if (/[.!?]"?$/.test(item.chunk.trim())) {
+                        sentences.push([...currentSentence]);
+                        currentSentence = [];
+                    }
+                });
+                if (currentSentence.length > 0) sentences.push(currentSentence);
+
+                sentences.forEach((sChunks, idx) => {
+                    sentenceCardsHtml += `
+                    <div class="sentence-card">
+                        <span class="sentence-num">문장 #${String(idx + 1).padStart(2, '0')}</span>
+                        <div class="chunk-container">`;
+                    
+                    let fullSentenceEnText = "";
+
+                    sChunks.forEach(c => {
+                        fullSentenceEnText += c.chunk + " ";
+                        let rawWords = c.chunk.split(' ');
+                        let chunkWordsHtml = "";
+
+                        rawWords.forEach(w => {
+                            let meaning = findWordMeaning(w, data.words);
+                            chunkWordsHtml += meaning 
+                                ? `<span class="word-item" data-meaning="${meaning}">${w}</span> ` 
+                                : `<span class="word-item" data-meaning="${w}">${w}</span> `;
+                        });
+
+                        sentenceCardsHtml += `
+                            <div class="chunk-unit">
+                                <div class="chunk-en">${chunkWordsHtml}</div>
+                                <div class="chunk-kr">${c.translation}</div>
+                            </div>`;
+                    });
+
+                    sentenceCardsHtml += `</div>`;
+
+                    if (data.syntax_analysis) {
+                        let matchSyntax = data.syntax_analysis.find(syn => 
+                            fullSentenceEnText.includes(syn.sentence.substring(0, 12)) || syn.sentence.includes(sChunks[0].chunk.substring(0, 12))
+                        );
+
+                        if (matchSyntax) {
+                            let formattedAnalysis = matchSyntax.analysis
+                                .replace(/\[S\]|\(S\)|\[주어\]/g, '<span class="badge badge-s">S</span>')
+                                .replace(/\[V\]|\(V\)|\[동사\]/g, '<span class="badge badge-v">V</span>')
+                                .replace(/\[O\]|\(O\)|\[목적어\]|\[C\]|\(C\)|\[보어\]/g, '<span class="badge badge-o">O/C</span>')
+                                .replace(/\[M\]|\(M\)|\[수식어\]/g, '<span class="badge badge-m">M</span>');
+
+                            sentenceCardsHtml += `
+                            <div class="syntax-box">
+                                <strong>📌 구문 분석:</strong> ${formattedAnalysis}
+                            </div>`;
+
+                            if (matchSyntax.modifier_relation) {
+                                sentenceCardsHtml += `
+                                <div class="modifier-box">
+                                    <strong>🔗 수식 관계 및 구조:</strong> ${matchSyntax.modifier_relation}
+                                </div>`;
+                            }
+                        }
+                    }
+
+                    sentenceCardsHtml += `</div>`;
+                });
+            }
+            document.getElementById('sentenceCardsArea').innerHTML = sentenceCardsHtml;
+
+            if (data.key_grammar) {
+                let grammarHtml = "";
+                data.key_grammar.forEach(g => {
+                    grammarHtml += `
+                    <div class="grammar-point-box">
+                        <strong>[${g.point}]</strong> <code>${g.target_text}</code>
+                        <div style="margin-top:2px; color:#451a03;">👉 ${g.explanation}</div>
+                    </div>`;
+                });
+                document.getElementById('grammarSummaryArea').innerHTML = grammarHtml;
+            }
+
+            if (data.structure_chart) {
+                const graphDiv = document.getElementById('mermaidGraph');
+                graphDiv.removeAttribute('data-processed');
+                graphDiv.innerHTML = data.structure_chart;
+                mermaid.run({ nodes: [graphDiv] });
+            }
+
+            generateQuiz();
+
+            document.getElementById('outputArea').style.display = 'block';
+            applyToggles();
         }
 
         function generateQuiz() {
@@ -501,9 +609,6 @@
             }
 
             const vocabList = globalData.key_vocabulary;
-            quizScore = { correct: 0, answered: 0, total: vocabList.length };
-            document.getElementById('quizScoreBanner').style.display = 'none';
-
             let quizHtml = "";
 
             vocabList.forEach((item, qIdx) => {
@@ -526,8 +631,7 @@
                 quizHtml += `
                 <div class="quiz-item" id="quiz-item-${qIdx}">
                     <div class="quiz-question">
-                        Q${qIdx + 1}. <strong style="color:var(--primary-color); font-size:18px;">${item.word}</strong> 
-                        <span style="font-size:13px; color:#64748b; font-weight:normal;">(${item.pos || '단어'})</span>의 뜻은?
+                        Q${qIdx + 1}. <strong style="color:var(--primary-color); font-size:18px;">${item.word}</strong>의 뜻은?
                     </div>
                     <div class="quiz-options">`;
                 
@@ -544,18 +648,14 @@
 
         function checkAnswer(qIdx, isCorrect, btnEl) {
             const parent = document.getElementById(`quiz-item-${qIdx}`);
-            const buttons = parent.querySelectorAll('.quiz-opt-btn');
-            
             if (parent.dataset.answered) return;
             parent.dataset.answered = "true";
 
-            quizScore.answered++;
-
+            const buttons = parent.querySelectorAll('.quiz-opt-btn');
             buttons.forEach(btn => { btn.style.cursor = 'default'; });
 
             if (isCorrect) {
                 btnEl.classList.add('correct');
-                quizScore.correct++;
             } else {
                 btnEl.classList.add('wrong');
                 buttons.forEach(btn => {
@@ -563,146 +663,6 @@
                         btn.classList.add('correct');
                     }
                 });
-            }
-
-            if (quizScore.answered === quizScore.total) {
-                const banner = document.getElementById('quizScoreBanner');
-                const scorePercent = Math.round((quizScore.correct / quizScore.total) * 100);
-                banner.innerText = `🎉 퀴즈 완료! 총 ${quizScore.total}문제 중 ${quizScore.correct}개 맞춤 (${scorePercent}점)`;
-                banner.style.display = 'block';
-            }
-        }
-
-        function renderApp() {
-            try {
-                let rawInput = document.getElementById('jsonInput').value.trim();
-                rawInput = rawInput.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
-                globalData = JSON.parse(rawInput);
-                const data = globalData;
-                
-                document.getElementById('passageTitle').innerText = "📌 " + (data.title || "영어 지문 분석");
-                document.getElementById('fullTranslation').innerText = data.full_translation || "";
-
-                if (data.key_vocabulary && data.key_vocabulary.length > 0) {
-                    let preVocabHtml = `<table class="vocab-table">
-                        <thead><tr><th>표현 (Word)</th><th>품사</th><th>뜻 (Meaning)</th><th>유의어</th></tr></thead><tbody>`;
-                    data.key_vocabulary.forEach(v => {
-                        preVocabHtml += `<tr>
-                            <td><strong style="color:#1e40af; font-size:15px;">${v.word}</strong></td>
-                            <td>${v.pos || '-'}</td>
-                            <td class="vocab-meaning-td"><strong>${v.meaning}</strong></td>
-                            <td>${v.synonym || '-'}</td>
-                        </tr>`;
-                    });
-                    preVocabHtml += "</tbody></table>";
-                    document.getElementById('preVocabArea').innerHTML = preVocabHtml;
-                    document.getElementById('preVocabCard').style.display = 'block';
-                } else {
-                    document.getElementById('preVocabCard').style.display = 'none';
-                }
-
-                let sentenceCardsHtml = "";
-                if (data.segmented_text && data.segmented_text.length > 0) {
-                    let sentences = [];
-                    let currentSentence = [];
-
-                    data.segmented_text.forEach(item => {
-                        currentSentence.push(item);
-                        if (/[.!?]"?$/.test(item.chunk.trim())) {
-                            sentences.push([...currentSentence]);
-                            currentSentence = [];
-                        }
-                    });
-                    if (currentSentence.length > 0) sentences.push(currentSentence);
-
-                    sentences.forEach((sChunks, idx) => {
-                        sentenceCardsHtml += `
-                        <div class="sentence-card">
-                            <span class="sentence-num">문장 #${String(idx + 1).padStart(2, '0')}</span>
-                            <div class="chunk-container">`;
-                        
-                        let fullSentenceEnText = "";
-
-                        sChunks.forEach(c => {
-                            fullSentenceEnText += c.chunk + " ";
-                            let rawWords = c.chunk.split(' ');
-                            let chunkWordsHtml = "";
-
-                            rawWords.forEach(w => {
-                                let meaning = findWordMeaning(w, data.words);
-                                if (meaning) {
-                                    chunkWordsHtml += `<span class="word-item" data-meaning="${meaning}">${w}</span> `;
-                                } else {
-                                    chunkWordsHtml += `<span class="word-item" data-meaning="${w}">${w}</span> `;
-                                }
-                            });
-
-                            sentenceCardsHtml += `
-                                <div class="chunk-unit">
-                                    <div class="chunk-en">${chunkWordsHtml}</div>
-                                    <div class="chunk-kr">${c.translation}</div>
-                                </div>`;
-                        });
-
-                        sentenceCardsHtml += `</div>`;
-
-                        if (data.syntax_analysis) {
-                            let matchSyntax = data.syntax_analysis.find(syn => 
-                                fullSentenceEnText.includes(syn.sentence.substring(0, 12)) || syn.sentence.includes(sChunks[0].chunk.substring(0, 12))
-                            );
-
-                            if (matchSyntax) {
-                                let formattedAnalysis = matchSyntax.analysis
-                                    .replace(/\[S\]|\(S\)|\[주어\]/g, '<span class="badge badge-s">S</span>')
-                                    .replace(/\[V\]|\(V\)|\[동사\]/g, '<span class="badge badge-v">V</span>')
-                                    .replace(/\[O\]|\(O\)|\[목적어\]|\[C\]|\(C\)|\[보어\]/g, '<span class="badge badge-o">O/C</span>')
-                                    .replace(/\[M\]|\(M\)|\[수식어\]/g, '<span class="badge badge-m">M</span>');
-
-                                sentenceCardsHtml += `
-                                <div class="syntax-box">
-                                    <strong>📌 구문 분석:</strong> ${formattedAnalysis}
-                                </div>`;
-
-                                if (matchSyntax.modifier_relation) {
-                                    sentenceCardsHtml += `
-                                    <div class="modifier-box">
-                                        <strong>🔗 수식 관계 및 구조:</strong> ${matchSyntax.modifier_relation}
-                                    </div>`;
-                                }
-                            }
-                        }
-
-                        sentenceCardsHtml += `</div>`;
-                    });
-                }
-                document.getElementById('sentenceCardsArea').innerHTML = sentenceCardsHtml;
-
-                if (data.key_grammar) {
-                    let grammarHtml = "";
-                    data.key_grammar.forEach(g => {
-                        grammarHtml += `
-                        <div class="grammar-point-box">
-                            <strong>[${g.point}]</strong> <code>${g.target_text}</code>
-                            <div style="margin-top:2px; color:#451a03;">👉 ${g.explanation}</div>
-                        </div>`;
-                    });
-                    document.getElementById('grammarSummaryArea').innerHTML = grammarHtml;
-                }
-
-                if (data.structure_chart) {
-                    const graphDiv = document.getElementById('mermaidGraph');
-                    graphDiv.removeAttribute('data-processed');
-                    graphDiv.innerHTML = data.structure_chart;
-                    mermaid.run({ nodes: [graphDiv] });
-                }
-
-                generateQuiz();
-
-                document.getElementById('outputArea').style.display = 'block';
-                applyToggles();
-            } catch (e) {
-                console.error(e);
-                alert('JSON 데이터 변환 중 오류가 발생했습니다.');
             }
         }
     </script>
